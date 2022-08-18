@@ -3,7 +3,9 @@ const std = @import("std");
 pub fn main() !void {
     var random = std.rand.DefaultPrng.init(@intCast(u64, std.time.milliTimestamp())).random();
     var score = Score.init(random);
-    try score.play();
+    score.play() catch {
+        std.debug.print("Quitting\n", .{});
+    };
 }
 
 const Row = struct {
@@ -164,6 +166,14 @@ const Score = struct {
         return false;
     }
 
+    pub fn total(score: Score) i32 {
+        var t: i32 = 0;
+        for (score.rows) |row| {
+            t += row.score();
+        }
+        return t;
+    }
+
     pub fn render(score: Score, writer: anytype) !void {
         var total_neg: i32 = 0;
         var total_pos: i32 = 0;
@@ -222,6 +232,7 @@ const Score = struct {
                 }
             }
         }
+        try stdout.print("Game over! Final score: {d}\n", .{ score.total() });
     }
 
     pub fn removeDicePairInput(score: *Score, reader: anytype, writer: anytype) !void {
