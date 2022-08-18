@@ -232,7 +232,7 @@ const Score = struct {
                 }
             }
         }
-        score.render(stdout);
+        try score.render(stdout);
         try stdout.print("Game over! Final score: {d}\n", .{ score.total() });
     }
 
