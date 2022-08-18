@@ -123,17 +123,19 @@ const Score = struct {
     }
 
     pub fn removeDicePair(score: *Score, die1: u8, die2: u8) !void {
-        const idx = try removeDie(score, die1);
-        _ = removeDie(score, die2) catch |err| {
-            score.dice[idx] = die1;
-            return err;
-        };
-        score.add(die1 + die2);
+        const idx1 = try score.removeDie(die1);
+        errdefer score.dice[idx1] = die1;
+        const idx2 = try score.removeDie(die2);
+        errdefer score.dice[idx2] = die2;
+        try score.add(die1 + die2);
     }
 
-    pub fn add(score: *Score, number: u32) void {
+    pub fn add(score: *Score, number: u32) !void {
         for (score.rows) |*row| {
             if (row.number == number) {
+                if (row.count >= 10) {
+                    return error.RowFull;
+                }
                 row.count += 1;
             }
         }
@@ -230,11 +232,19 @@ const Score = struct {
             var iter = std.mem.tokenize(u8, input, " ");
             const die_t1 = iter.next();
             const die_t2 = iter.next();
-            if (die_t1 == null or die_t2 == null) continue;
+            if (die_t1 == null) continue;
+            if (std.mem.eql(u8, die_t1.?, "?")) {
+                try score.render(writer);
+                continue;
+            }
+            if (die_t2 == null) continue;
             const die1 = std.fmt.parseInt(u8, die_t1.?, 10) catch continue;
             const die2 = std.fmt.parseInt(u8, die_t2.?, 10) catch continue;
-            score.removeDicePair(die1, die2) catch {
-                try writer.print("Invalid dice pair\n", .{});
+            score.removeDicePair(die1, die2) catch |err| {
+                switch (err) {
+                    error.RowFull => try writer.print("Row full\n", .{}),
+                    error.NoDie => try writer.print("Invalid dice pair\n", .{}),
+                }
                 continue;
             };
             return;
@@ -248,25 +258,25 @@ test "simple test" {
     var random = std.rand.DefaultPrng.init(@intCast(u64, std.time.milliTimestamp())).random();
     var score = Score.init(random);
     try score.render(stdout);
-    score.add(2);
+    try score.add(2);
     try score.render(stdout);
-    score.add(2);
+    try score.add(2);
     try score.render(stdout);
-    score.add(2);
+    try score.add(2);
     try score.render(stdout);
-    score.add(2);
+    try score.add(2);
     try score.render(stdout);
-    score.add(2);
+    try score.add(2);
     try score.render(stdout);
-    score.add(2);
+    try score.add(2);
     try score.render(stdout);
-    score.add(2);
+    try score.add(2);
     try score.render(stdout);
-    score.add(2);
+    try score.add(2);
     try score.render(stdout);
-    score.add(2);
+    try score.add(2);
     try score.render(stdout);
-    score.add(2);
+    try score.add(2);
     try score.render(stdout);
     score.addFifth(2);
     try score.render(stdout);
