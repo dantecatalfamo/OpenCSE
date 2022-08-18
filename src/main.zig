@@ -13,8 +13,8 @@ const Row = struct {
 
     pub fn score(row: Row) i32 {
         return switch (row.count) {
-            0...4 => -200,
-            5 => 0,
+            1...4 => -200,
+            0, 5 => 0,
             else => |count| @intCast(i32, (count - 5) * row.points),
         };
     }
@@ -86,7 +86,6 @@ const Score = struct {
         Row{ .points = 100, .number = 2  },
         Row{ .points = 70,  .number = 3  },
         Row{ .points = 60,  .number = 4  },
-
         Row{ .points = 50,  .number = 5  },
         Row{ .points = 40,  .number = 6  },
         Row{ .points = 30,  .number = 7  },
@@ -113,19 +112,22 @@ const Score = struct {
         }
     }
 
-    pub fn removeDie(score: *Score, die: u8) !void {
-        for (score.dice) |*score_die| {
+    pub fn removeDie(score: *Score, die: u8) !usize {
+        for (score.dice) |*score_die, idx| {
             if (score_die.* == die) {
                 score_die.* = 0;
-                return;
+                return idx;
             }
         }
         return error.NoDie;
     }
 
     pub fn removeDicePair(score: *Score, die1: u8, die2: u8) !void {
-        try removeDie(score, die1);
-        try removeDie(score, die2);
+        const idx = try removeDie(score, die1);
+        _ = removeDie(score, die2) catch |err| {
+            score.dice[idx] = die1;
+            return err;
+        };
         score.add(die1 + die2);
     }
 
@@ -188,7 +190,11 @@ const Score = struct {
             }
         }
         try writer.print("+----------+-------------------------+------------+---------+\n", .{});
-        try writer.print("           |  -200   | 0 | + + + + + |{d: >5} +{d: >4} | = {d: >4} |\n", .{ total_neg, @intCast(u32, total_pos), total_pos + total_neg });
+        if (total_neg == 0) {
+            try writer.print("           |  -200   | 0 | + + + + + |    0 +{d: >4} | = {d: >4} |\n", .{ @intCast(u32, total_pos), total_pos + total_neg });
+        } else {
+            try writer.print("           |  -200   | 0 | + + + + + |{d: >5} +{d: >4} | = {d: >4} |\n", .{ total_neg, @intCast(u32, total_pos), total_pos + total_neg });
+        }
         try writer.print("           +------------------------------------------------+\n", .{});
         try writer.print("\nDice: ", .{});
         for (score.dice) |die| {
@@ -204,11 +210,9 @@ const Score = struct {
         while (score.finished() == false) {
             score.roll();
             try score.render(stdout);
-            const dice = try getDicePairInput(stdin, stdout);
-            try score.removeDicePair(dice[0], dice[1]);
+            try score.removeDicePairInput(stdin, stdout);
             try score.render(stdout);
-            const dice2 = try getDicePairInput(stdin, stdout);
-            try score.removeDicePair(dice2[0], dice2[1]);
+            try score.removeDicePairInput(stdin, stdout);
             for (score.dice) |die| {
                 if (die != 0) {
                     score.addFifth(die);
@@ -217,7 +221,7 @@ const Score = struct {
         }
     }
 
-    fn getDicePairInput(reader: anytype, writer: anytype) ![2]u8 {
+    pub fn removeDicePairInput(score: *Score, reader: anytype, writer: anytype) !void {
         var buff: [100]u8 = undefined;
         while (true) {
             try writer.print("Dice pair to use: ", .{});
@@ -228,7 +232,11 @@ const Score = struct {
             if (die_t1 == null or die_t2 == null) continue;
             const die1 = std.fmt.parseInt(u8, die_t1.?, 10) catch continue;
             const die2 = std.fmt.parseInt(u8, die_t2.?, 10) catch continue;
-            return [2]u8{ die1, die2 };
+            score.removeDicePair(die1, die2) catch {
+                try writer.print("Invalid dice pair\n", .{});
+                continue;
+            };
+            return;
         }
     }
 };
