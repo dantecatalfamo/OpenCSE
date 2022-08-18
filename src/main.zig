@@ -1,5 +1,5 @@
 // Copyright (c) 2022 Dante Catalfamo
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 const std = @import("std");
 
