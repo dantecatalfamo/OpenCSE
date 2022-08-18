@@ -21,3 +21,5 @@ Free implementation of the [Can't Stop Express](https://boardgamegeek.com/boardg
            |  -200   | 0 | + + + + + |      +   0 | =    +0 |
            +------------------------------------------------+
 ```
+
+Dice pairs are entered separated by a space. For example `3 5`.
