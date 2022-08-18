@@ -1,7 +1,8 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var random = std.rand.DefaultPrng.init(@intCast(u64, std.time.milliTimestamp())).random();
+    var prng = std.rand.DefaultPrng.init(@intCast(u64, std.time.milliTimestamp()));
+    var random = prng.random();
     var score = Score.init(random);
     score.play() catch {
         std.debug.print("Quitting\n", .{});
