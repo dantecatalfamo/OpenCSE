@@ -190,10 +190,11 @@ const Score = struct {
             }
         }
         try writer.print("+----------+-------------------------+------------+---------+\n", .{});
+        try writer.print("           |  -200   | 0 | + + + + + |", .{});
         if (total_neg == 0) {
-            try writer.print("           |  -200   | 0 | + + + + + |    0 +{d: >4} | = {d: >4} |\n", .{ @intCast(u32, total_pos), total_pos + total_neg });
+            try writer.print("      +{d: >4} | = {d: >5} |\n", .{ @intCast(u32, total_pos), total_pos + total_neg });
         } else {
-            try writer.print("           |  -200   | 0 | + + + + + |{d: >5} +{d: >4} | = {d: >4} |\n", .{ total_neg, @intCast(u32, total_pos), total_pos + total_neg });
+            try writer.print("{d: >5} +{d: >4} | = {d: >5} |\n", .{ total_neg, @intCast(u32, total_pos), total_pos + total_neg });
         }
         try writer.print("           +------------------------------------------------+\n", .{});
         try writer.print("\nDice: ", .{});
