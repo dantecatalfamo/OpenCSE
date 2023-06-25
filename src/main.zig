@@ -113,13 +113,13 @@ const Score = struct {
     }
 
     pub fn roll(score: *Score) void {
-        for (score.dice) |*die| {
+        for (&score.dice) |*die| {
             die.* = score.random.intRangeAtMost(u8, 1, 6);
         }
     }
 
     pub fn removeDie(score: *Score, die: u8) !usize {
-        for (score.dice) |*score_die, idx| {
+        for (&score.dice, 0..) |*score_die, idx| {
             if (score_die.* == die) {
                 score_die.* = 0;
                 return idx;
@@ -137,7 +137,7 @@ const Score = struct {
     }
 
     pub fn add(score: *Score, number: u32) !void {
-        for (score.rows) |*row| {
+        for (&score.rows) |*row| {
             if (row.number == number) {
                 if (row.count >= 10) {
                     return error.RowFull;
@@ -148,7 +148,7 @@ const Score = struct {
     }
 
     pub fn addFifth(score: *Score, number: u32) void {
-        for (score.fifth) |*fifth| {
+        for (&score.fifth) |*fifth| {
             if (fifth.number == number) {
                 fifth.count += 1;
                 return;
@@ -184,7 +184,7 @@ const Score = struct {
         try writer.print("+----------------------------------------------------------------------+\n", .{});
         try writer.print("|  A  |  B |           C             |      D     |        5th         |\n", .{});
         try writer.print("|-----+----+-------------------------+------------+--------------------+\n", .{});
-        for (score.rows) |row, row_idx| {
+        for (score.rows, 0..) |row, row_idx| {
             if (row_idx < 3) {
                 const fifth = score.fifth[row_idx];
                 try row.render(writer, row_idx, fifth);
