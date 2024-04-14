@@ -4,8 +4,8 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var prng = std.rand.DefaultPrng.init(@intCast(u64, std.time.milliTimestamp()));
-    var random = prng.random();
+    var prng = std.rand.DefaultPrng.init(@intCast(std.time.milliTimestamp()));
+    const random = prng.random();
     var score = Score.init(random);
     score.play() catch {
         std.debug.print("Quitting\n", .{});
@@ -21,7 +21,7 @@ const Row = struct {
         return switch (row.count) {
             1...4 => -200,
             0, 5 => 0,
-            else => |count| @intCast(i32, (count - 5) * row.points),
+            else => |count| @intCast((count - 5) * row.points),
         };
     }
 
@@ -55,7 +55,7 @@ const Row = struct {
             else => "|",
         };
         if (scr > 0) {
-            try writer.print("{d: >3} {s}", .{ @intCast(u32, scr), ender });
+            try writer.print("{d: >3} {s}", .{ @as(u32, @intCast(scr)), ender });
         } else {
             try writer.print("    {s}", .{ ender });
         }
@@ -208,9 +208,9 @@ const Score = struct {
         try writer.print("+----------+-------------------------+------------+---------+\n", .{});
         try writer.print("           |  -200   | 0 | + + + + + |", .{});
         if (total_neg == 0) {
-            try writer.print("      +{d: >4} | = {d: >5} |\n", .{ @intCast(u32, total_pos), total_pos + total_neg });
+            try writer.print("      +{d: >4} | = {d: >5} |\n", .{ @as(u32, @intCast(total_pos)), total_pos + total_neg });
         } else {
-            try writer.print("{d: >5} +{d: >4} | = {d: >5} |\n", .{ total_neg, @intCast(u32, total_pos), total_pos + total_neg });
+            try writer.print("{d: >5} +{d: >4} | = {d: >5} |\n", .{ total_neg, @as(u32, @intCast(total_pos)), total_pos + total_neg });
         }
         try writer.print("           +------------------------------------------------+\n", .{});
         try writer.print("\nDice: ", .{});
@@ -271,7 +271,7 @@ const Score = struct {
 test "simple test" {
     const stdout = std.io.getStdOut().writer();
     try stdout.writeAll("\n");
-    var random = std.rand.DefaultPrng.init(@intCast(u64, std.time.milliTimestamp())).random();
+    const random = std.rand.DefaultPrng.init(@intCast(std.time.milliTimestamp())).random();
     var score = Score.init(random);
     try score.render(stdout);
     try score.add(2);
@@ -315,7 +315,7 @@ test "simple test" {
 }
 
 test "rolling dice" {
-    var random = std.rand.DefaultPrng.init(@intCast(u64, std.time.milliTimestamp())).random();
+    const random = std.rand.DefaultPrng.init(@intCast(std.time.milliTimestamp())).random();
     var score = Score.init(random);
     std.debug.print("Dice: {any}\n", .{ score.dice });
     score.roll();
